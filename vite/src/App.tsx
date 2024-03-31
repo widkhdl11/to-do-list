@@ -1,12 +1,9 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { Session, createClient } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { FC, useEffect, useState } from "react";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_KEY
-);
+import CreateToDo from "./components/CreateToDo";
+import supabase from "./lib/supabaseClient";
 
 const App: FC = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -32,7 +29,13 @@ const App: FC = () => {
   if (!session) {
     return <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />;
   } else {
-    return <div className="bg-red-100">Hello, {session.user.email}</div>;
+    return (
+      <div className="bg-red-100">
+        Hello, {session.user.email}{" "}
+        <button onClick={() => supabase.auth.signOut()}>Sign Out</button>
+        <CreateToDo />
+      </div>
+    );
   }
 };
 

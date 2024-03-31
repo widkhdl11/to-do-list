@@ -3,30 +3,39 @@
 // enables autocomplete, go to definition, etc. 유저가 맞는지 확인을 해서 => auth작업 디비에 투두
 // 추가 => db crud 작업 supabase-client 사용(deno의 임포트 방식 -> cdn )
 
-import {createClient} from "https://esm.sh/@supabase/supabase-js@2.39.8";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.41.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   const authHeader = req.headers.get("Authorization");
-  const {content} = await req.json();
-
+  const { content } = await req.json();
 
   const supabase = createClient(
-
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-    { global : { headers : { Authorization : authHeader! } } },
+    { global: { headers: { Authorization: authHeader! } } },
   );
 
-    const { data : {user} } = await supabase.auth.getUser();
-    // const user = data.user;
-    
-    const response = await supabase.from("to_do_list").insert({content, user_id: user?.id})
+  const { data: { user } } = await supabase.auth.getUser();
+  // const user = data.user;
 
-    return new Response(JSON.stringify(response),{
-      headers : {"Contetnt-Type" : "application/json"},
-    });
-      
+  await supabase.from("to_do_list").insert({
+    content,
+    user_id: user?.id,
+  });
+
+  const response = await supabase.from("to_do_list").select().eq(
+    "user_id",
+    user?.id,
+  ).order("id", { ascending: false }).limit(1).single();
+
+  return new Response(JSON.stringify(response), {
+    headers: { ...corsHeaders, "Contetnt-Type": "application/json" },
+  });
 });
 
 /* To invoke locally:
