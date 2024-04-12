@@ -16,10 +16,6 @@ const App: FC = () => {
             setSession(data.session);
         });
 
-        supabase.functions.invoke("get-all-to-do").then(({ data }) => {
-            setToDos(data);
-        });
-
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -30,6 +26,10 @@ const App: FC = () => {
     }, []);
 
     useEffect(() => {
+        supabase.functions.invoke("get-all-to-do").then(({ data }) => {
+            setToDos(data);
+        });
+
         console.log(session);
     }, [session]);
 
@@ -50,9 +50,16 @@ const App: FC = () => {
                     Sign Out
                 </button>
                 <CreateToDo toDos={toDos} setToDos={setToDos} />
-                {toDos?.map((v) => (
-                    <ToDoCard key={v.id} todo={v} />
-                ))}
+                <ul>
+                    {toDos?.map((v) => (
+                        <ToDoCard
+                            key={v.id}
+                            todo={v}
+                            toDos={toDos}
+                            setToDos={setToDos}
+                        />
+                    ))}
+                </ul>
             </div>
         );
     }
